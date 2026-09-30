@@ -36,6 +36,36 @@ public class TItemChangeBill implements Serializable {
     @ApiModelProperty(value = "要素调整核签单号")
     private String billNo;
 
+    /** 事项码（县核点验头一样，市核只认码不认名号） */
+    @TableField("item_code")
+    @ApiModelProperty(value = "事项码（县核点验头一样，市核只认码不认名号）")
+    private String itemCode;
+
+    /** 改动前那几栏 */
+    @TableField("before_text")
+    @ApiModelProperty(value = "改动前那几栏")
+    private String beforeText;
+
+    /** 改动后那几栏 */
+    @TableField("after_text")
+    @ApiModelProperty(value = "改动后那几栏")
+    private String afterText;
+
+    /** 改的缘故 */
+    @TableField("change_reason")
+    @ApiModelProperty(value = "改的缘故")
+    private String changeReason;
+
+    /** 承办底册代号（前置检落点，须在编底册） */
+    @TableField("site_no")
+    @ApiModelProperty(value = "承办底册代号（前置检落点，须在编底册）")
+    private String siteNo;
+
+    /** 本事项第几轮报送（打回重走一轮加一，沉底那批不与新批并排） */
+    @TableField("round_no")
+    @ApiModelProperty(value = "本事项第几轮报送（打回重走一轮加一，沉底那批不与新批并排）")
+    private Integer roundNo;
+
     /** 当前所在道次 0..2（县核/市核/省定） */
     @TableField("node_no")
     @ApiModelProperty(value = "当前所在道次 0..2（县核/市核/省定）")
@@ -56,9 +86,9 @@ public class TItemChangeBill implements Serializable {
     @ApiModelProperty(value = "本口已落名数")
     private Integer signCount;
 
-    /** 报批情形 0在核 1已核讫 2已打回 */
+    /** 报批情形 0在核 1已核讫 2已打回 3不予通过(止步) 4已撤回(止步) 5已落章封住 */
     @TableField("status")
-    @ApiModelProperty(value = "报批情形 0在核 1已核讫 2已打回")
+    @ApiModelProperty(value = "报批情形 0在核 1已核讫 2已打回 3不予通过(止步) 4已撤回(止步) 5已落章封住")
     private Integer status;
 
     /** 删除标记 0正常 1删除 */
@@ -107,6 +137,54 @@ public class TItemChangeBill implements Serializable {
 
     public void setBillNo(String billNo) {
         this.billNo = billNo;
+    }
+
+    public String getItemCode() {
+        return itemCode;
+    }
+
+    public void setItemCode(String itemCode) {
+        this.itemCode = itemCode;
+    }
+
+    public String getBeforeText() {
+        return beforeText;
+    }
+
+    public void setBeforeText(String beforeText) {
+        this.beforeText = beforeText;
+    }
+
+    public String getAfterText() {
+        return afterText;
+    }
+
+    public void setAfterText(String afterText) {
+        this.afterText = afterText;
+    }
+
+    public String getChangeReason() {
+        return changeReason;
+    }
+
+    public void setChangeReason(String changeReason) {
+        this.changeReason = changeReason;
+    }
+
+    public String getSiteNo() {
+        return siteNo;
+    }
+
+    public void setSiteNo(String siteNo) {
+        this.siteNo = siteNo;
+    }
+
+    public Integer getRoundNo() {
+        return roundNo;
+    }
+
+    public void setRoundNo(Integer roundNo) {
+        this.roundNo = roundNo;
     }
 
     public Integer getNodeNo() {

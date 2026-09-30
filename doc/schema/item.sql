@@ -57,11 +57,17 @@ CREATE TABLE IF NOT EXISTS t_item_catalog_ver (
 CREATE TABLE IF NOT EXISTS t_item_change_bill (
   id bigint NOT NULL COMMENT '主键',
   bill_no varchar(64) DEFAULT NULL COMMENT '要素调整核签单号',
+  item_code varchar(64) DEFAULT NULL COMMENT '事项码（县核点验头一样，市核只认码不认名号）',
+  before_text varchar(1000) DEFAULT NULL COMMENT '改动前那几栏',
+  after_text varchar(1000) DEFAULT NULL COMMENT '改动后那几栏',
+  change_reason varchar(500) DEFAULT NULL COMMENT '改的缘故',
+  site_no varchar(64) DEFAULT NULL COMMENT '承办底册代号（前置检落点，须在编底册）',
+  round_no int DEFAULT '1' COMMENT '本事项第几轮报送（打回重走一轮加一，沉底那批不与新批并排）',
   node_no int DEFAULT NULL COMMENT '当前所在道次 0..2（县核/市核/省定）',
   sign_mode int DEFAULT NULL COMMENT '同口并签办法 0任一人 1两名点齐',
-  need_count int DEFAULT NULL COMMENT '本口应落名数',
-  sign_count int DEFAULT NULL COMMENT '本口已落名数',
-  status int DEFAULT NULL COMMENT '报批情形 0在核 1已核讫 2已打回',
+  need_count int DEFAULT NULL COMMENT '本口应落名数（由签迹点回，不作填报框）',
+  sign_count int DEFAULT NULL COMMENT '本口已落名数（由签迹点回，不作填报框）',
+  status int DEFAULT NULL COMMENT '报批情形 0在核 1已核讫 2已打回 3不予通过(止步) 4已撤回(止步) 5已落章封住',
   del_flag int DEFAULT '0' COMMENT '删除标记 0正常 1删除',
   create_by varchar(64) DEFAULT NULL COMMENT '创建者',
   create_time datetime DEFAULT NULL COMMENT '创建时间',
@@ -70,6 +76,25 @@ CREATE TABLE IF NOT EXISTS t_item_change_bill (
   remark varchar(500) DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='事项要素调整逐级核签单';
+
+-- 过口签迹：一道口一处落点，一笔一名，并排落名各记各的；落名数只从本表顺着点出。
+CREATE TABLE IF NOT EXISTS t_item_change_sign (
+  id bigint NOT NULL COMMENT '主键',
+  bill_id bigint NOT NULL COMMENT '核签单主键',
+  round_no int NOT NULL COMMENT '所属轮次（打回重走另起一轮，沉底批不与新批并排）',
+  node_no int NOT NULL COMMENT '落名道次 0..2（县核/市核/省定）',
+  signer varchar(64) NOT NULL COMMENT '落名人本人（代笔不作数：同人当轮当口只记一笔）',
+  sign_role int DEFAULT 0 COMMENT '省定并排分工 0不分工 1盯要素齐不齐 2盯与上位名录合不合',
+  sign_time datetime DEFAULT NULL COMMENT '落笔时刻（掐同一分钟也按两笔算）',
+  del_flag int DEFAULT '0' COMMENT '删除标记 0正常 1删除（打回时旧轮整批沉底置1，不物理删）',
+  create_by varchar(64) DEFAULT NULL COMMENT '创建者',
+  create_time datetime DEFAULT NULL COMMENT '创建时间',
+  update_by varchar(64) DEFAULT NULL COMMENT '更新者',
+  update_time datetime DEFAULT NULL COMMENT '更新时间',
+  remark varchar(500) DEFAULT NULL COMMENT '备注',
+  UNIQUE KEY uk_bill_round_node_signer (bill_id, round_no, node_no, signer),
+  KEY idx_bill_round_node (bill_id, round_no, node_no)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='核签单过口签迹（一笔一名）';
 
 CREATE TABLE IF NOT EXISTS t_item_check_task (
   id bigint NOT NULL COMMENT '主键',
