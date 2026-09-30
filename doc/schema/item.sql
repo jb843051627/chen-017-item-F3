@@ -57,19 +57,53 @@ CREATE TABLE IF NOT EXISTS t_item_catalog_ver (
 CREATE TABLE IF NOT EXISTS t_item_change_bill (
   id bigint NOT NULL COMMENT '主键',
   bill_no varchar(64) DEFAULT NULL COMMENT '要素调整核签单号',
-  node_no int DEFAULT NULL COMMENT '当前所在道次 0..2（县核/市核/省定）',
+  item_code varchar(64) DEFAULT NULL COMMENT '事项码（三道口算件、市核对照只认它）',
+  item_name varchar(128) DEFAULT NULL COMMENT '事项名号（仅记载，不作对照凭据）',
+  before_fields varchar(2000) DEFAULT NULL COMMENT '改动前那几栏',
+  after_fields varchar(2000) DEFAULT NULL COMMENT '改动后那几栏',
+  change_reason varchar(500) DEFAULT NULL COMMENT '改的缘故',
+  site_no varchar(64) DEFAULT NULL COMMENT '承办底册代号（前置检须命中在编底册）',
+  arch_check int DEFAULT '0' COMMENT '承办底册前置检 0未过 1已过，未过则永久停县核',
+  node_no int DEFAULT NULL COMMENT '当前所在道次 0..2（县核/市核/省定）；已核讫停在2',
+  seq_no int DEFAULT NULL COMMENT '同事项当轮件序（当年第二件当场点名）',
+  round_no int DEFAULT '1' COMMENT '重走轮次，首报为1，省定表述打回一次加一',
   sign_mode int DEFAULT NULL COMMENT '同口并签办法 0任一人 1两名点齐',
-  need_count int DEFAULT NULL COMMENT '本口应落名数',
-  sign_count int DEFAULT NULL COMMENT '本口已落名数',
-  status int DEFAULT NULL COMMENT '报批情形 0在核 1已核讫 2已打回',
+  need_count int DEFAULT NULL COMMENT '本口应落名数（由签迹点数得出）',
+  sign_count int DEFAULT NULL COMMENT '本口已落名数（只按签迹表同一回点数回填）',
+  status int DEFAULT NULL COMMENT '报批情形 0在核 1已核讫 2已打回 3已撤回',
+  public_sync int DEFAULT '0' COMMENT '对外名录同步 0未同步 1已随省定章同步',
+  locked int DEFAULT '0' COMMENT '全单封存 0在办 1省定落章后锁住',
+  seal_time datetime DEFAULT NULL COMMENT '省定落章时间',
   del_flag int DEFAULT '0' COMMENT '删除标记 0正常 1删除',
   create_by varchar(64) DEFAULT NULL COMMENT '创建者',
   create_time datetime DEFAULT NULL COMMENT '创建时间',
   update_by varchar(64) DEFAULT NULL COMMENT '更新者',
   update_time datetime DEFAULT NULL COMMENT '更新时间',
   remark varchar(500) DEFAULT NULL COMMENT '备注',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_bill_round_seq (item_code, round_no, seq_no),
+  KEY idx_bill_no (bill_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='事项要素调整逐级核签单';
+
+-- 一笔署名一行：口次+轮次+先后定位；沉底旧批 del_flag=1，不与新批并排。
+CREATE TABLE IF NOT EXISTS t_item_change_bill_sign (
+  id bigint NOT NULL COMMENT '主键',
+  bill_id bigint NOT NULL COMMENT '核签单主键',
+  node_no int NOT NULL COMMENT '落名口次 0县核 1市核 2省定',
+  round_no int NOT NULL COMMENT '落名时的重走轮次',
+  seq int NOT NULL COMMENT '同一口内落名先后（从1起）',
+  signer varchar(64) NOT NULL COMMENT '落名人（亲笔者本人）',
+  watch_role int DEFAULT NULL COMMENT '盯项角色 1盯要素齐不齐 2盯上位名录合规矩',
+  verdict int DEFAULT NULL COMMENT '结论 0不予通过 1通过 2表述不合规矩打回',
+  comment_text varchar(500) DEFAULT NULL COMMENT '签注',
+  sign_time datetime DEFAULT NULL COMMENT '落名时间',
+  del_flag int DEFAULT '0' COMMENT '删除标记 0正常 1沉底',
+  create_by varchar(64) DEFAULT NULL COMMENT '创建者',
+  create_time datetime DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_bill_round_node_seq (bill_id, round_no, node_no, seq),
+  KEY idx_bill_node_round (bill_id, node_no, round_no)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='核签单签迹';
 
 CREATE TABLE IF NOT EXISTS t_item_check_task (
   id bigint NOT NULL COMMENT '主键',
